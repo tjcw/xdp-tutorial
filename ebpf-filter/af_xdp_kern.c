@@ -70,10 +70,10 @@ struct {
 } accept_map SEC(".maps");
 
 
-//struct {
-//	__uint(priority, 10);
-//	__uint(XDP_PASS, 1);
-//} XDP_RUN_CONFIG(xsk_my_prog);
+struct {
+	__uint(priority, 50);
+	__uint(XDP_PASS, 1);
+} XDP_RUN_CONFIG(xsk_my_prog);
 
 static __always_inline void display_one(int index) {
 	void * mapped=bpf_map_lookup_elem(&my_xsks_map, &index) ;
