@@ -72,7 +72,7 @@ struct {
 
 struct {
 	__uint(priority, 10);
-//	__uint(XDP_PASS, 1);
+	__uint(XDP_PASS, 1);
 } XDP_RUN_CONFIG(xsk_my_prog);
 
 static __always_inline void display_one(int index) {
@@ -346,8 +346,10 @@ int xsk_my_prog(struct xdp_md *ctx)
 		}
 		if ( action == XDP_REDIRECT) {
 			stats_record_action(ctx, XDP_REDIRECT);
-			if( k_tracing ) bpf_printk("returning through bpf_redirect_map\n");
-			return bpf_redirect_map(&my_xsks_map, index, 0);
+//			if( k_tracing ) bpf_printk("returning through bpf_redirect_map\n");
+//			return bpf_redirect_map(&my_xsks_map, index, 0);
+			if ( k_tracing ) bpf_printk("Substitute XDP_PASS for bpf_redirect_map\n");
+			return XDP_PASS;
 		}
     }
 out:
