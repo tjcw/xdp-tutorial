@@ -14,7 +14,7 @@
 
 #include "xsk_def_xdp_prog.h"
 
-#define XDP_DISPATCHER_VERSION 1
+//#define XDP_DISPATCHER_VERSION 1
 
 #define DEFAULT_QUEUE_IDS 64
 
@@ -43,12 +43,14 @@ enum {
 //	k_action_pass ,
 //	k_action_drop
 //}  ;
-struct {
-	__uint(type, BPF_MAP_TYPE_XSKMAP);
-	__uint(key_size, sizeof(int));
-	__uint(value_size, sizeof(int));
-	__uint(max_entries, DEFAULT_QUEUE_IDS);
-} my_xsks_map SEC(".maps");
+//struct {
+//	__uint(type, BPF_MAP_TYPE_XSKMAP);
+//	__uint(key_size, sizeof(int));
+//	__uint(value_size, sizeof(int));
+//	__uint(max_entries, DEFAULT_QUEUE_IDS);
+//} my_xsks_map SEC(".maps");
+
+#define my_xsks_map xsks_map
 
 struct fivetuple {
 	__u32 saddr ; // Source address (network byte order)
@@ -68,10 +70,10 @@ struct {
 } accept_map SEC(".maps");
 
 
-//struct {
-//	__uint(priority, 20);
+struct {
+	__uint(priority, 10);
 //	__uint(XDP_PASS, 1);
-//} XDP_RUN_CONFIG(xsk_def_prog);
+} XDP_RUN_CONFIG(xsk_my_prog);
 
 static __always_inline void display_one(int index) {
 	void * mapped=bpf_map_lookup_elem(&my_xsks_map, &index) ;
@@ -266,7 +268,7 @@ static __always_inline int parse_udp4hdr(struct hdr_cursor *nh,
 
 
 SEC("xdp")
-int xsk_def_prog(struct xdp_md *ctx)
+int xsk_my_prog(struct xdp_md *ctx)
 {
 
 	struct fivetuple f ;
