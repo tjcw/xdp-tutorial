@@ -43,14 +43,14 @@ enum {
 //	k_action_pass ,
 //	k_action_drop
 //}  ;
-//struct {
-//	__uint(type, BPF_MAP_TYPE_XSKMAP);
-//	__uint(key_size, sizeof(int));
-//	__uint(value_size, sizeof(int));
-//	__uint(max_entries, DEFAULT_QUEUE_IDS);
-//} my_xsks_map SEC(".maps");
-
 #define my_xsks_map xsks_map
+
+struct {
+	__uint(type, BPF_MAP_TYPE_XSKMAP);
+	__uint(key_size, sizeof(int));
+	__uint(value_size, sizeof(int));
+	__uint(max_entries, DEFAULT_QUEUE_IDS);
+} my_xsks_map SEC(".maps");
 
 struct fivetuple {
 	__u32 saddr ; // Source address (network byte order)
