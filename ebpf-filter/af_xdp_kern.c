@@ -71,7 +71,7 @@ struct {
 
 
 struct {
-	__uint(priority, 10);
+	__uint(priority, 50);
 	__uint(XDP_PASS, 1);
 } XDP_RUN_CONFIG(xsk_my_prog);
 
