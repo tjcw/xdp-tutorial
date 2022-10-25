@@ -410,6 +410,103 @@ static uint64_t xsk_umem_free_frames(struct xsk_umem_info *umem)
 	return umem->umem_frame_free;
 }
 
+struct my_xsk_ctx {
+	struct xsk_ring_prod *fill;
+	struct xsk_ring_cons *comp;
+	struct xsk_umem *umem;
+	__u32 queue_id;
+	int refcount;
+	int ifindex;
+	__u64 netns_cookie;
+	int xsks_map_fd;
+	struct list_head list;
+	struct xdp_program *xdp_prog;
+	char ifname[IFNAMSIZ];
+	int my_xsks_map_fd;
+};
+
+struct my_xsk_socket {
+	struct xsk_ring_cons *rx;
+	struct xsk_ring_prod *tx;
+	struct my_xsk_ctx *ctx;
+	struct xsk_socket_config config;
+	int fd;
+};
+
+static int my_xsk_lookup_bpf_map(int prog_fd)
+{
+	__u32 i, *map_ids, num_maps, prog_len = sizeof(struct bpf_prog_info);
+	__u32 map_len = sizeof(struct bpf_map_info);
+	struct bpf_prog_info prog_info = {};
+	int fd, err, my_xsks_map_fd = -ENOENT;
+	struct bpf_map_info map_info;
+
+	err = bpf_obj_get_info_by_fd(prog_fd, &prog_info, &prog_len);
+	if (err)
+		return err;
+
+	num_maps = prog_info.nr_map_ids;
+
+	map_ids = calloc(prog_info.nr_map_ids, sizeof(*map_ids));
+	if (!map_ids)
+		return -ENOMEM;
+
+	memset(&prog_info, 0, prog_len);
+	prog_info.nr_map_ids = num_maps;
+	prog_info.map_ids = (__u64)(unsigned long)map_ids;
+
+	err = bpf_obj_get_info_by_fd(prog_fd, &prog_info, &prog_len);
+	if (err) {
+		free(map_ids);
+		return err;
+	}
+
+	for (i = 0; i < prog_info.nr_map_ids; i++) {
+		fd = bpf_map_get_fd_by_id(map_ids[i]);
+		if (fd < 0)
+			continue;
+
+		memset(&map_info, 0, map_len);
+		err = bpf_obj_get_info_by_fd(fd, &map_info, &map_len);
+		if (err) {
+			close(fd);
+			continue;
+		}
+
+		fprintf(stderr, "my_xsk_lookup_bpf_map looking at map %s\n", map_info.name);
+		if (!strncmp(map_info.name, "my_xsks_map", sizeof(map_info.name)) &&
+		    map_info.key_size == 4 && map_info.value_size == 4) {
+			my_xsks_map_fd = fd;
+			break;
+		}
+
+		close(fd);
+	}
+
+	free(map_ids);
+	fprintf(stderr, "my_xsk_lookup_bpf_map returns %d\n", my_xsks_map_fd);
+	return my_xsks_map_fd;
+}
+
+static int __my_xsk_setup_my_xsks_map(struct my_xsk_socket *socket, int *my_xsks_map_fd)
+{
+	struct my_xsk_ctx *ctx=socket->ctx ;
+	int err;
+	ctx->my_xsks_map_fd = my_xsk_lookup_bpf_map(xdp_program__fd(ctx->xdp_prog));
+	if (ctx->my_xsks_map_fd < 0) {
+		return ctx->my_xsks_map_fd;
+	}
+
+	if (socket->rx) {
+		err = bpf_map_update_elem(ctx->my_xsks_map_fd, &ctx->queue_id, &socket->fd, 0);
+		if (err)
+			return err;
+	}
+	if (my_xsks_map_fd)
+		*my_xsks_map_fd = ctx->my_xsks_map_fd;
+	return 0;
+}
+
 static struct xsk_socket_info *xsk_configure_socket(struct config *cfg,
 							int if_queue)
 {
@@ -455,7 +552,25 @@ static struct xsk_socket_info *xsk_configure_socket(struct config *cfg,
 	printf("xsk_socket__create returns %d\n", ret) ;
 	if (ret)
 		goto error_exit;
+	struct my_xsk_socket my_socket=xsk_info->xsk;
+	struct my_xsk_ctx *my_ctx = my_socket->ctx;
 
+//	int my_xsks_map_fd = xsk_lookup_my_bpf_map(xdp_program__fd(ctx->xdp_prog));
+//	if (my_xsks_map_fd < 0) {
+//		err = my_xsks_map_fd;
+//		goto err_lookup;
+//	}
+//
+//	if (xsk_info->xsk->rx) {
+//		err = bpf_map_update_elem(my_xsks_map_fd, , &xsk->fd, 0);
+//		if (err)
+//			goto err_lookup;
+//	}
+
+	fprintf(stderr, "Loading my xsks map\n") ;
+	ret = __my_xsk_setup_my_xsks_map(my_socket, NULL);
+	if (ret)
+		goto error_exit;
 
 	/* Stuff the receive path with buffers, we assume we have enough */
 	__u32 idx;
