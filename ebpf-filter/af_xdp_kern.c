@@ -50,7 +50,7 @@ struct {
 	__uint(key_size, sizeof(int));
 	__uint(value_size, sizeof(int));
 	__uint(max_entries, DEFAULT_QUEUE_IDS);
-} xsks_map2 SEC(".maps");
+} xsks_map SEC(".maps");
 
 struct fivetuple {
 	__u32 saddr ; // Source address (network byte order)
@@ -76,8 +76,8 @@ struct {
 } XDP_RUN_CONFIG(xsk_my_prog);
 
 static __always_inline void display_one(int index) {
-	void * mapped=bpf_map_lookup_elem(&xsks_map2, &index) ;
-	bpf_printk("xsks_map2[%d]=%p\n", index, mapped) ;
+	void * mapped=bpf_map_lookup_elem(&xsks_map, &index) ;
+	bpf_printk("xsks_map[%d]=%p\n", index, mapped) ;
 }
 
 static __always_inline void display_all(void) {
@@ -276,8 +276,8 @@ int xsk_my_prog(struct xdp_md *ctx)
     int index = ctx->rx_queue_index;
 	/* A set entry here means that the correspnding queue_id
 	 * has an active AF_XDP socket bound to it. */
-	void * mapped=bpf_map_lookup_elem(&xsks_map2, &index) ;
-	if( k_tracing ) bpf_printk("xsks_map2[%d]=%p\n", index, mapped) ;
+	void * mapped=bpf_map_lookup_elem(&xsks_map, &index) ;
+	if( k_tracing ) bpf_printk("xsks_map[%d]=%p\n", index, mapped) ;
 
     enum xdp_action action = XDP_PASS; /* Default action */
 	void * v_permit = NULL ;
@@ -347,7 +347,7 @@ int xsk_my_prog(struct xdp_md *ctx)
 		if ( action == XDP_REDIRECT) {
 			stats_record_action(ctx, XDP_REDIRECT);
 //			if( k_tracing ) bpf_printk("returning through bpf_redirect_map\n");
-//			return bpf_redirect_map(&xsks_map2, index, 0);
+//			return bpf_redirect_map(&xsks_map, index, 0);
 			if ( k_tracing ) bpf_printk("Substitute XDP_PASS for bpf_redirect_map\n");
 			return XDP_PASS;
 		}
