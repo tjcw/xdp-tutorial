@@ -537,8 +537,8 @@ static struct xsk_socket_info *xsk_configure_socket(struct config *cfg,
 	xsk_cfg.libbpf_flags = 0;
 	xsk_cfg.xdp_flags = cfg->xdp_flags;
 	xsk_cfg.bind_flags = cfg->xsk_bind_flags;
-//	xsk_cfg.libxdp_flags = XSK_LIBXDP_FLAGS__INHIBIT_PROG_LOAD;
-	xsk_cfg.libxdp_flags = 0;
+	xsk_cfg.libxdp_flags = XSK_LIBXDP_FLAGS__INHIBIT_PROG_LOAD;
+//	xsk_cfg.libxdp_flags = 0;
 	ret = xsk_socket__create_shared(&xsk_info->xsk,
 			                 cfg->ifname,
 			                 if_queue,
