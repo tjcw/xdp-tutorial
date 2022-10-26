@@ -1230,13 +1230,13 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	// Set up xsks map
-	err=xsk_setup_xdp_prog(cfg.ifindex, NULL);
-	if (err)
-	{
-		fprintf(stderr, "ERROR:xsk_setup_xdp_prog returns %d\n", err) ;
-		exit(EXIT_FAILURE);
-	}
+//	// Set up xsks map
+//	err=xsk_setup_xdp_prog(cfg.ifindex, NULL);
+//	if (err)
+//	{
+//		fprintf(stderr, "ERROR:xsk_setup_xdp_prog returns %d\n", err) ;
+//		exit(EXIT_FAILURE);
+//	}
 
 	/* Start thread to do statistics display */
 	if (verbose && 0 == k_instrument) {
