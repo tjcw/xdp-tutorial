@@ -66,7 +66,7 @@ struct {
 	__uint(key_size, sizeof(struct fivetuple)) ;
 	__uint(value_size, sizeof(int)) ;
 	__uint(max_entries, k_hashmap_size) ;
-	__uint(pinning, LIBBPF_PIN_BY_NAME);
+//	__uint(pinning, LIBBPF_PIN_BY_NAME);
 } accept_map SEC(".maps");
 
 
