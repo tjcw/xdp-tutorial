@@ -53,6 +53,7 @@
 
 enum {
 	k_instrument = 1 ,
+	k_instrument_detail = 0 ,
 	k_verify_umem = 0 ,
 	k_verbose = 0 ,
 	k_rx_queue_count = 16 ,
@@ -387,7 +388,7 @@ static uint64_t umem_alloc_umem_frame(struct xsk_umem_info *umem)
 	}
 	umem->umem_frame_addr[umem->umem_frame_free] = INVALID_UMEM_FRAME;
 	umem->allocation_count += 1;
-	if(k_instrument) printf("umem_alloc_umem_frame umem=%p allocation_count=%ld free_count=%ld frame=0x%lx\n", umem, umem->allocation_count, umem->free_count, frame) ;
+	if(k_instrument_detail) printf("umem_alloc_umem_frame umem=%p allocation_count=%ld free_count=%ld frame=0x%lx\n", umem, umem->allocation_count, umem->free_count, frame) ;
 	return frame;
 }
 
