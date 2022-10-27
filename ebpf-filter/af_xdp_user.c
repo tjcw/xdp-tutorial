@@ -569,10 +569,11 @@ static struct xsk_socket_info *xsk_configure_socket(struct config *cfg,
 //	socket.tx=xsk_info->xsk->tx;
 //
 //	struct xsk_socket_info *socket_info=xsk_info->xsk;
-	struct xsk_socket * socket = xsk_info->xsk ;
-	int socket_fd=socket->fd ;
 	if (xsks_map ) {
-	ret = bpf_map_update_elem(bpf_map__fd(xsks_map), &if_queue, &socket_fd, BPF_ANY);
+		struct xsk_socket * socket = xsk_info->xsk ;
+		int socket_fd=socket->fd ;
+		int map_fd=bpf_map__fd(xsks_map);
+		ret = bpf_map_update_elem(map_fd, &if_queue, &socket_fd, BPF_ANY);
 		printf("bpf_map_update_elem returns %d\n", ret) ;
 		if (ret)
 			goto error_exit;
