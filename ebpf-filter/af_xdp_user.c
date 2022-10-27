@@ -568,8 +568,8 @@ static struct xsk_socket_info *xsk_configure_socket(struct config *cfg,
 //	socket.rx=xsk_info->xsk->rx;
 //	socket.tx=xsk_info->xsk->tx;
 //
-	struct xsk_socket_info *socket_info=xsk_info->xsk;
-	struct xsk_socket * socket = socket_info->xsk ;
+//	struct xsk_socket_info *socket_info=xsk_info->xsk;
+	struct xsk_socket * socket = xsk_info->xsk ;
 	int socket_fd=socket->fd ;
 	if (xsks_map ) {
 	ret = bpf_map_update_elem(bpf_map__fd(xsks_map), &if_queue, &socket_fd, BPF_ANY);
@@ -1177,7 +1177,7 @@ int main(int argc, char **argv)
 	};
 	struct all_socket_info *all_socket_info;
 	struct xdp_program *xdp_prog ;
-//	struct bpf_object *bpf_object = NULL ;
+	struct bpf_object *bpf_object = NULL ;
 	int err;
 	pthread_t stats_poll_thread;
 	pthread_t tun_read_thread;
@@ -1211,7 +1211,11 @@ int main(int argc, char **argv)
 		fprintf(stderr,"Opening program file %s\n", cfg.filename) ;
 		xdp_prog=xdp_program__open_file(cfg.filename,NULL, NULL)  ;
 		fprintf(stderr,"xdp_prog=%p\n", xdp_prog) ;
-		xsks_map = bpf_object__find_map_by_name(xdp_prog, "xsks_map");
+		bpf_object = xdp_program__bpf_obj(xdp_prog) ;
+		fprintf(stderr,"bpf_object=%p\n", bpf_object) ;
+//		assert(bpf_object) ;
+		xsks_map = bpf_object__find_map_by_name(bpf_object, "xsks_map");
+		fprintf(stderr,"xsks_map=%p\n", xsks_map) ;
 
 	}
 //	err = pin_maps_in_bpf_object(bpf_object, pin_dir);
@@ -1245,8 +1249,6 @@ int main(int argc, char **argv)
 			fprintf(stderr, "ERROR:xdp_program__attach returns %d\n", err) ;
 			exit(EXIT_FAILURE);
 		}
-//		bpf_object = xdp_program__bpf_obj(xdp_prog) ;
-//		assert(bpf_object) ;
 
 	}
 //	// Set up xsks map
