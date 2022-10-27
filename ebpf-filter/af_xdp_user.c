@@ -569,7 +569,7 @@ static struct xsk_socket_info *xsk_configure_socket(struct config *cfg,
 //	socket.tx=xsk_info->xsk->tx;
 //
 //	struct xsk_socket_info *socket_info=xsk_info->xsk;
-	if (xsks_map ) {
+	if (xsks_map_fd != -1 ) {
 		struct xsk_socket * socket = xsk_info->xsk ;
 		int socket_fd=socket->fd ;
 //		int map_fd=bpf_map__fd(xsks_map);
@@ -623,7 +623,7 @@ error_exit:
 	return NULL;
 }
 
-static struct all_socket_info *xsk_configure_socket_all(struct config *cfg, int *xsks_map_fd)
+static struct all_socket_info *xsk_configure_socket_all(struct config *cfg, int xsks_map_fd)
 {
 
 	struct all_socket_info *xsk_info_all = calloc(1, sizeof(*xsk_info_all));
@@ -1214,7 +1214,7 @@ int main(int argc, char **argv)
 		fprintf(stderr,"Opening program file %s\n", cfg.filename) ;
 		xdp_prog=xdp_program__open_file(cfg.filename,NULL, NULL)  ;
 		fprintf(stderr,"xdp_prog=%p\n", xdp_prog) ;
-		xsks_map_fd = my_fetch_xsks_map_fd(xdp_prog, cfg.ifname);
+		xsks_map_fd = my_fetch_xsks_map_fd(cfg.ifname, xdp_prog);
 		bpf_object = xdp_program__bpf_obj(xdp_prog) ;
 		fprintf(stderr,"bpf_object=%p\n", bpf_object) ;
 //		assert(bpf_object) ;
