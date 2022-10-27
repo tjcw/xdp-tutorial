@@ -573,6 +573,7 @@ static struct xsk_socket_info *xsk_configure_socket(struct config *cfg,
 		struct xsk_socket * socket = xsk_info->xsk ;
 		int socket_fd=socket->fd ;
 		int map_fd=bpf_map__fd(xsks_map);
+		printf("bpf_map_update_elem(%d,%p,%p,%u)\n",map_fd, &if_queue, &socket_fd, BPF_ANY) ;
 		ret = bpf_map_update_elem(map_fd, &if_queue, &socket_fd, BPF_ANY);
 		printf("bpf_map_update_elem returns %d\n", ret) ;
 		if (ret)
