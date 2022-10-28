@@ -31,7 +31,7 @@ struct datarec {
 
 enum {
 	k_tracing = 1,
-	k_tracing_detail = 0
+	k_tracing_detail = 1
 };
 
 enum {
@@ -347,9 +347,9 @@ int xsk_my_prog(struct xdp_md *ctx)
 		if ( action == XDP_REDIRECT) {
 			stats_record_action(ctx, XDP_REDIRECT);
 //			if( k_tracing ) bpf_printk("returning through bpf_redirect_map\n");
-//			return bpf_redirect_map(&xsks_map, index, 0);
-			if ( k_tracing ) bpf_printk("Substitute XDP_PASS for bpf_redirect_map\n");
-			return XDP_PASS;
+			return bpf_redirect_map(&xsks_map, index, XDP_PASS);
+//			if ( k_tracing ) bpf_printk("Substitute XDP_PASS for bpf_redirect_map\n");
+//			return XDP_PASS;
 		}
     }
 out:

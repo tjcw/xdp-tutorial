@@ -1210,17 +1210,25 @@ int main(int argc, char **argv)
 
 //	struct bpf_map * xsks_map = NULL ;
 	/* Load custom program if configured */
-	fprintf(stderr, "cfg.filename=%s\n", cfg.filename);
+	fprintf(stderr, "main cfg.filename=%s\n", cfg.filename);
 	if (cfg.filename[0] != 0) {
-		fprintf(stderr,"Opening program file %s\n", cfg.filename) ;
+		fprintf(stderr,"main Opening program file %s\n", cfg.filename) ;
 		xdp_prog=xdp_program__open_file(cfg.filename,NULL, NULL)  ;
-		fprintf(stderr,"xdp_prog=%p\n", xdp_prog) ;
+		fprintf(stderr,"main xdp_prog=%p\n", xdp_prog) ;
 		xsks_map_fd = my_fetch_xsks_map_fd(cfg.ifname, xdp_prog);
 		bpf_object = xdp_program__bpf_obj(xdp_prog) ;
-		fprintf(stderr,"bpf_object=%p\n", bpf_object) ;
+		fprintf(stderr,"main bpf_object=%p\n", bpf_object) ;
 //		assert(bpf_object) ;
 //		xsks_map = bpf_object__find_map_by_name(bpf_object, "xsks_map");
 //		fprintf(stderr,"xsks_map=%p\n", xsks_map) ;
+
+		err=xdp_program__attach(xdp_prog,
+				cfg.ifindex, XDP_MODE_SKB, 0);
+		if (err)
+		{
+			fprintf(stderr, "ERROR:xdp_program__attach returns %d\n", err) ;
+			exit(EXIT_FAILURE);
+		}
 
 	}
 //	err = pin_maps_in_bpf_object(bpf_object, pin_dir);
@@ -1246,16 +1254,17 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	if (cfg.filename[0] != 0) {
-		err=xdp_program__attach(xdp_prog,
-				cfg.ifindex, XDP_MODE_SKB, 0);
-		if (err)
-		{
-			fprintf(stderr, "ERROR:xdp_program__attach returns %d\n", err) ;
-			exit(EXIT_FAILURE);
-		}
+//	if (cfg.filename[0] != 0) {
+//		err=xdp_program__attach(xdp_prog,
+//				cfg.ifindex, XDP_MODE_SKB, 0);
+//		if (err)
+//		{
+//			fprintf(stderr, "ERROR:xdp_program__attach returns %d\n", err) ;
+//			exit(EXIT_FAILURE);
+//		}
+//
+//	}
 
-	}
 //	// Set up xsks map
 //	err=xsk_setup_xdp_prog(cfg.ifindex, NULL);
 //	if (err)
