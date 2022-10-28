@@ -1210,6 +1210,7 @@ int main(int argc, char **argv)
 
 //	struct bpf_map * xsks_map = NULL ;
 	/* Load custom program if configured */
+	fprintf(stderr, "cfg.filename=%s\n", cfg.filename);
 	if (cfg.filename[0] != 0) {
 		fprintf(stderr,"Opening program file %s\n", cfg.filename) ;
 		xdp_prog=xdp_program__open_file(cfg.filename,NULL, NULL)  ;
