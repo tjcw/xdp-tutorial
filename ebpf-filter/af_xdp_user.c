@@ -1215,13 +1215,6 @@ int main(int argc, char **argv)
 		fprintf(stderr,"main Opening program file %s\n", cfg.filename) ;
 		xdp_prog=xdp_program__open_file(cfg.filename,NULL, NULL)  ;
 		fprintf(stderr,"main xdp_prog=%p\n", xdp_prog) ;
-		xsks_map_fd = my_fetch_xsks_map_fd(cfg.ifname, xdp_prog);
-		bpf_object = xdp_program__bpf_obj(xdp_prog) ;
-		fprintf(stderr,"main bpf_object=%p\n", bpf_object) ;
-//		assert(bpf_object) ;
-//		xsks_map = bpf_object__find_map_by_name(bpf_object, "xsks_map");
-//		fprintf(stderr,"xsks_map=%p\n", xsks_map) ;
-
 		err=xdp_program__attach(xdp_prog,
 				cfg.ifindex, XDP_MODE_SKB, 0);
 		if (err)
@@ -1229,6 +1222,13 @@ int main(int argc, char **argv)
 			fprintf(stderr, "ERROR:xdp_program__attach returns %d\n", err) ;
 			exit(EXIT_FAILURE);
 		}
+		xsks_map_fd = my_fetch_xsks_map_fd(cfg.ifname, xdp_prog);
+		bpf_object = xdp_program__bpf_obj(xdp_prog) ;
+		fprintf(stderr,"main bpf_object=%p\n", bpf_object) ;
+//		assert(bpf_object) ;
+//		xsks_map = bpf_object__find_map_by_name(bpf_object, "xsks_map");
+//		fprintf(stderr,"xsks_map=%p\n", xsks_map) ;
+
 
 	}
 //	err = pin_maps_in_bpf_object(bpf_object, pin_dir);
