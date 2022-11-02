@@ -1215,16 +1215,16 @@ int main(int argc, char **argv)
 		fprintf(stderr,"main Opening program file %s\n", cfg.filename) ;
 		xdp_prog=xdp_program__open_file(cfg.filename,NULL, NULL)  ;
 		fprintf(stderr,"main xdp_prog=%p\n", xdp_prog) ;
+		xsks_map_fd = my_fetch_xsks_map_fd(cfg.ifname, xdp_prog);
+		if ( xsks_map_fd < 0) {
+			fprintf(stderr, "ERROR:my_fetch_xsks_map_fd returns %d %s\n", xsks_map_fd, strerror(-xsks_map_fd)) ;
+			exit(EXIT_FAILURE);
+		}
 		err=xdp_program__attach(xdp_prog,
 				cfg.ifindex, XDP_MODE_SKB, 0);
 		if (err)
 		{
 			fprintf(stderr, "ERROR:xdp_program__attach returns %d\n", err) ;
-			exit(EXIT_FAILURE);
-		}
-		xsks_map_fd = my_fetch_xsks_map_fd(cfg.ifname, xdp_prog);
-		if ( xsks_map_fd < 0) {
-			fprintf(stderr, "ERROR:my_fetch_xsks_map_fd returns %d %s\n", xsks_map_fd, strerror(-xsks_map_fd)) ;
 			exit(EXIT_FAILURE);
 		}
 		bpf_object = xdp_program__bpf_obj(xdp_prog) ;
