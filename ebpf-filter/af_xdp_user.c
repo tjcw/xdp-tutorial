@@ -1223,6 +1223,10 @@ int main(int argc, char **argv)
 			exit(EXIT_FAILURE);
 		}
 		xsks_map_fd = my_fetch_xsks_map_fd(cfg.ifname, xdp_prog);
+		if ( xsks_map_fd < 0) {
+			fprintf(stderr, "ERROR:my_fetch_xsks_map_fd returns %d %s\n", xsks_map_fd, strerror(-xsks_map_fd)) ;
+			exit(EXIT_FAILURE);
+		}
 		bpf_object = xdp_program__bpf_obj(xdp_prog) ;
 		fprintf(stderr,"main bpf_object=%p\n", bpf_object) ;
 //		assert(bpf_object) ;
