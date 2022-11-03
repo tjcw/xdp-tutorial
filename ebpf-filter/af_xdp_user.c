@@ -546,9 +546,9 @@ static struct xsk_socket_info *xsk_configure_socket(struct config *cfg,
 	xsk_cfg.libbpf_flags = 0;
 	xsk_cfg.xdp_flags = cfg->xdp_flags;
 	xsk_cfg.bind_flags = cfg->xsk_bind_flags;
-	xsk_cfg.libxdp_flags = XSK_LIBXDP_FLAGS__INHIBIT_PROG_LOAD;
-//	xsk_cfg.libxdp_flags = 0;
-	ret = xsk_socket__create_shared(&xsk_info->xsk,
+//	xsk_cfg.libxdp_flags = XSK_LIBXDP_FLAGS__INHIBIT_PROG_LOAD;
+	xsk_cfg.libxdp_flags = 0;
+	ret = xsk_socket__create_shared_named_prog(&xsk_info->xsk,
 			                 cfg->ifname,
 			                 if_queue,
 							 xsk_info->umem.umem,
@@ -556,9 +556,10 @@ static struct xsk_socket_info *xsk_configure_socket(struct config *cfg,
 				             &xsk_info->tx,
 							 &(xsk_info->fq),
 							 &(xsk_info->cq),
-							 &xsk_cfg);
+							 &xsk_cfg,
+							 cfg->filename);
 
-	printf("xsk_socket__create returns %d\n", ret) ;
+	printf("xsk_socket__create_shared_named_prog returns %d\n", ret) ;
 	if (ret)
 		goto error_exit;
 //	struct my_xsk_ctx ctx;
@@ -1210,31 +1211,31 @@ int main(int argc, char **argv)
 
 //	struct bpf_map * xsks_map = NULL ;
 	/* Load custom program if configured */
-	fprintf(stderr, "main cfg.filename=%s\n", cfg.filename);
-	if (cfg.filename[0] != 0) {
-		fprintf(stderr,"main Opening program file %s\n", cfg.filename) ;
-		xdp_prog=xdp_program__open_file(cfg.filename,NULL, NULL)  ;
-		fprintf(stderr,"main xdp_prog=%p\n", xdp_prog) ;
-		xsks_map_fd = my_fetch_xsks_map_fd(cfg.ifname, xdp_prog);
-		if ( xsks_map_fd < 0) {
-			fprintf(stderr, "ERROR:my_fetch_xsks_map_fd returns %d %s\n", xsks_map_fd, strerror(-xsks_map_fd)) ;
-			exit(EXIT_FAILURE);
-		}
-		err=xdp_program__attach(xdp_prog,
-				cfg.ifindex, XDP_MODE_SKB, 0);
-		if (err)
-		{
-			fprintf(stderr, "ERROR:xdp_program__attach returns %d\n", err) ;
-			exit(EXIT_FAILURE);
-		}
-		bpf_object = xdp_program__bpf_obj(xdp_prog) ;
-		fprintf(stderr,"main bpf_object=%p\n", bpf_object) ;
-//		assert(bpf_object) ;
-//		xsks_map = bpf_object__find_map_by_name(bpf_object, "xsks_map");
-//		fprintf(stderr,"xsks_map=%p\n", xsks_map) ;
-
-
-	}
+//	fprintf(stderr, "main cfg.filename=%s\n", cfg.filename);
+//	if (cfg.filename[0] != 0) {
+//		fprintf(stderr,"main Opening program file %s\n", cfg.filename) ;
+//		xdp_prog=xdp_program__open_file(cfg.filename,NULL, NULL)  ;
+//		fprintf(stderr,"main xdp_prog=%p\n", xdp_prog) ;
+//		xsks_map_fd = my_fetch_xsks_map_fd(cfg.ifname, xdp_prog);
+//		if ( xsks_map_fd < 0) {
+//			fprintf(stderr, "ERROR:my_fetch_xsks_map_fd returns %d %s\n", xsks_map_fd, strerror(-xsks_map_fd)) ;
+//			exit(EXIT_FAILURE);
+//		}
+//		err=xdp_program__attach(xdp_prog,
+//				cfg.ifindex, XDP_MODE_SKB, 0);
+//		if (err)
+//		{
+//			fprintf(stderr, "ERROR:xdp_program__attach returns %d\n", err) ;
+//			exit(EXIT_FAILURE);
+//		}
+//		bpf_object = xdp_program__bpf_obj(xdp_prog) ;
+//		fprintf(stderr,"main bpf_object=%p\n", bpf_object) ;
+////		assert(bpf_object) ;
+////		xsks_map = bpf_object__find_map_by_name(bpf_object, "xsks_map");
+////		fprintf(stderr,"xsks_map=%p\n", xsks_map) ;
+//
+//
+//	}
 //	err = pin_maps_in_bpf_object(bpf_object, pin_dir);
 //	if (err)
 //	{
