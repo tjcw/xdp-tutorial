@@ -56,7 +56,8 @@ enum {
 	k_instrument_detail = 0 ,
 	k_verify_umem = 0 ,
 	k_verbose = 0 ,
-	k_rx_queue_count = 16 ,
+//	k_rx_queue_count = 16 ,
+	k_rx_queue_count = 8 ,
 	k_skipping = false
 };
 
