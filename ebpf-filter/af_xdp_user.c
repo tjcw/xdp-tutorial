@@ -517,7 +517,7 @@ static uint64_t xsk_umem_free_frames(struct xsk_umem_info *umem)
 //}
 
 static struct xsk_socket_info *xsk_configure_socket(struct config *cfg,
-							int xsks_map_fd,
+		                    int xsks_map_fd,
 							int if_queue)
 {
 	struct xsk_socket_config xsk_cfg;
@@ -547,9 +547,9 @@ static struct xsk_socket_info *xsk_configure_socket(struct config *cfg,
 	xsk_cfg.libbpf_flags = 0;
 	xsk_cfg.xdp_flags = cfg->xdp_flags;
 	xsk_cfg.bind_flags = cfg->xsk_bind_flags;
-//	xsk_cfg.libxdp_flags = XSK_LIBXDP_FLAGS__INHIBIT_PROG_LOAD;
-	xsk_cfg.libxdp_flags = 0;
-	ret = xsk_socket__create_shared_named_prog(&xsk_info->xsk,
+	xsk_cfg.libxdp_flags = XSK_LIBXDP_FLAGS__INHIBIT_PROG_LOAD;
+//	xsk_cfg.libxdp_flags = 0;
+	ret = xsk_socket__create_shared(&xsk_info->xsk,
 			                 cfg->ifname,
 			                 if_queue,
 							 xsk_info->umem.umem,
@@ -574,7 +574,7 @@ static struct xsk_socket_info *xsk_configure_socket(struct config *cfg,
 	if (xsks_map_fd != -1 ) {
 		struct xsk_socket * socket = xsk_info->xsk ;
 		int socket_fd=socket->fd ;
-//		int map_fd=bpf_map__fd(xsks_map);
+//		int xsks_map_fd=bpf_map__fd(xsks_map);
 		printf("bpf_map_update_elem(%d,%p,%p,%u)\n",xsks_map_fd, &if_queue, &socket_fd, BPF_ANY) ;
 		ret = bpf_map_update_elem(xsks_map_fd, &if_queue, &socket_fd, BPF_ANY);
 		printf("bpf_map_update_elem returns %d\n", ret) ;
@@ -1210,13 +1210,30 @@ int main(int argc, char **argv)
 	}
 
 
-//	struct bpf_map * xsks_map = NULL ;
+	struct bpf_map * xsks_map = NULL ;
 	/* Load custom program if configured */
-//	fprintf(stderr, "main cfg.filename=%s\n", cfg.filename);
-//	if (cfg.filename[0] != 0) {
-//		fprintf(stderr,"main Opening program file %s\n", cfg.filename) ;
-//		xdp_prog=xdp_program__open_file(cfg.filename,NULL, NULL)  ;
-//		fprintf(stderr,"main xdp_prog=%p\n", xdp_prog) ;
+	fprintf(stderr, "main cfg.filename=%s\n", cfg.filename);
+	if (cfg.filename[0] != 0) {
+		fprintf(stderr,"main Opening program file %s\n", cfg.filename) ;
+		xdp_prog=xdp_program__open_file(cfg.filename,NULL, NULL)  ;
+		fprintf(stderr,"main xdp_prog=%p\n", xdp_prog) ;
+		bpf_object = xdp_program__bpf_obj(xdp_prog) ;
+		fprintf(stderr,"main bpf_object=%p\n", bpf_object) ;
+		if ( bpf_object == NULL ) {
+			fprintf(stderr, "ERROR:xdp_program__bpf_obj returns NULL\n") ;
+			exit(EXIT_FAILURE);
+		}
+//		assert(bpf_object) ;
+		xsks_map = bpf_object__find_map_by_name(bpf_object, "xsks_map") ;
+		if ( xsks_map == NULL ) {
+			fprintf(stderr, "ERROR:bpf_object__find_map_by_name returns NULL\n") ;
+			exit(EXIT_FAILURE);
+		}
+		err = bpf_map__set_max_entries(xsks_map, k_rx_queue_count);
+		if ( err != 0) {
+			fprintf(stderr, "ERROR:bpf_map__set_max_entries returns %d %s\n", err, strerror(err)) ;
+			exit(EXIT_FAILURE);
+		}
 //		xsks_map_fd = my_fetch_xsks_map_fd(cfg.ifname, xdp_prog);
 //		if ( xsks_map_fd < 0) {
 //			fprintf(stderr, "ERROR:my_fetch_xsks_map_fd returns %d %s\n", xsks_map_fd, strerror(-xsks_map_fd)) ;
@@ -1229,14 +1246,11 @@ int main(int argc, char **argv)
 //			fprintf(stderr, "ERROR:xdp_program__attach returns %d\n", err) ;
 //			exit(EXIT_FAILURE);
 //		}
-//		bpf_object = xdp_program__bpf_obj(xdp_prog) ;
-//		fprintf(stderr,"main bpf_object=%p\n", bpf_object) ;
-////		assert(bpf_object) ;
-////		xsks_map = bpf_object__find_map_by_name(bpf_object, "xsks_map");
-////		fprintf(stderr,"xsks_map=%p\n", xsks_map) ;
-//
-//
-//	}
+//		xsks_map = bpf_object__find_map_by_name(bpf_object, "xsks_map");
+//		fprintf(stderr,"xsks_map=%p\n", xsks_map) ;
+
+
+	}
 //	err = pin_maps_in_bpf_object(bpf_object, pin_dir);
 //	if (err)
 //	{
@@ -1253,6 +1267,12 @@ int main(int argc, char **argv)
 	}
 
 	/* Open and configure the AF_XDP (xsk) socket */
+	int xsks_map_fd=bpf_map__fd(xsks_map);
+	if (xsks_map_fd < 0)
+	{
+		fprintf(stderr, "ERROR:bpf_map__fd returns %d %s\n", xsks_map_fd, strerror(-xsks_map_fd)) ;
+		exit(EXIT_FAILURE);
+	}
 	all_socket_info = xsk_configure_socket_all(&cfg, xsks_map_fd);
 	if (all_socket_info == NULL) {
 		fprintf(stderr, "ERROR: Can't setup AF_XDP sockets \"%s\"\n",
@@ -1260,16 +1280,16 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-//	if (cfg.filename[0] != 0) {
-//		err=xdp_program__attach(xdp_prog,
-//				cfg.ifindex, XDP_MODE_SKB, 0);
-//		if (err)
-//		{
-//			fprintf(stderr, "ERROR:xdp_program__attach returns %d\n", err) ;
-//			exit(EXIT_FAILURE);
-//		}
-//
-//	}
+	if (cfg.filename[0] != 0) {
+		err=xdp_program__attach(xdp_prog,
+				cfg.ifindex, XDP_MODE_SKB, 0);
+		if (err)
+		{
+			fprintf(stderr, "ERROR:xdp_program__attach returns %d\n", err) ;
+			exit(EXIT_FAILURE);
+		}
+
+	}
 
 //	// Set up xsks map
 //	err=xsk_setup_xdp_prog(cfg.ifindex, NULL);
