@@ -77,7 +77,7 @@ struct {
 
 static __always_inline void display_one(int index) {
 	void * mapped=bpf_map_lookup_elem(&xsks_map, &index) ;
-	bpf_printk("xsks_map[%d]=%p\n", index, mapped) ;
+	bpf_printk("xsks_map[%d]=%p", index, mapped) ;
 }
 
 static __always_inline void display_all(void) {
@@ -160,7 +160,7 @@ static __always_inline void display_all(void) {
 //	/* A set entry here means that the correspnding queue_id
 //	 * has an active AF_XDP socket bound to it. */
 //	void * mapped=bpf_map_lookup_elem(&xsks_map, &index) ;
-//	if( k_tracing ) bpf_printk("xsks[%d]=%p\n", index, mapped) ;
+//	if( k_tracing ) bpf_printk("xsks[%d]=%p", index, mapped) ;
 //	return bpf_redirect_map(&xsks_map, ctx->rx_queue_index, XDP_PASS);
 //}
 //#endif
@@ -176,7 +176,7 @@ struct {
 static __always_inline
 __u32 stats_record_action(struct xdp_md *ctx, __u32 action)
 {
-	if( k_tracing ) bpf_printk("stats_record_action action=%d\n", action);
+	if( k_tracing ) bpf_printk("stats_record_action action=%d", action);
 
 	if (action >= XDP_ACTION_MAX)
 		return XDP_ABORTED;
@@ -270,7 +270,7 @@ static void show_fivetuple(struct fivetuple *f) {
 	if(k_tracing) {
 		bpf_printk("fivetuple saddr=%08x daddr=%08x", f->saddr, f->daddr) ;
 		bpf_printk(" sport=%04x dport=%04x", f->sport, f->dport) ;
-		bpf_printk(" protocol=%04x padding=%u\n", f->protocol, f->padding) ;
+		bpf_printk(" protocol=%04x padding=%u", f->protocol, f->padding) ;
 	}
 
 }
@@ -285,7 +285,7 @@ int xsk_my_prog(struct xdp_md *ctx)
 	/* A set entry here means that the correspnding queue_id
 	 * has an active AF_XDP socket bound to it. */
 	void * mapped=bpf_map_lookup_elem(&xsks_map, &index) ;
-	if( k_tracing ) bpf_printk("xsks_map[%d]=%p\n", index, mapped) ;
+	if( k_tracing ) bpf_printk("xsks_map[%d]=%p", index, mapped) ;
 
     enum xdp_action action = XDP_PASS; /* Default action */
 	void * v_permit = NULL ;
@@ -306,7 +306,7 @@ int xsk_my_prog(struct xdp_md *ctx)
 		 * header type in the packet correct?), and bounds checking.
 		 */
 		nh_type = parse_ethhdr(&nh, data_end, &eth);
-		if( k_tracing ) bpf_printk("nh_type=0x%04x ETH_P_IP=0x%04x\n", nh_type, ETH_P_IP);
+		if( k_tracing ) bpf_printk("nh_type=0x%04x ETH_P_IP=0x%04x", nh_type, ETH_P_IP);
 		if (nh_type == bpf_htons(ETH_P_IP))
 			{
 						/* Assignment additions go below here */
@@ -316,7 +316,7 @@ int xsk_my_prog(struct xdp_md *ctx)
 				if (rc != 0) goto out ;
 
 				int protocol=iphdr->protocol;
-				if( k_tracing ) bpf_printk("protocol=%d\n", protocol) ;
+				if( k_tracing ) bpf_printk("protocol=%d", protocol) ;
 
 				f.protocol = protocol ;
 				f.saddr = iphdr->saddr ;
@@ -348,7 +348,7 @@ int xsk_my_prog(struct xdp_md *ctx)
 				}
 			}
 
-		if( k_tracing ) bpf_printk("v_permit=%p\n", v_permit);
+		if( k_tracing ) bpf_printk("v_permit=%p", v_permit);
 
 		if ( v_permit ) {
 			action = *(int *) v_permit ;
@@ -357,9 +357,9 @@ int xsk_my_prog(struct xdp_md *ctx)
 		}
 		if ( action == XDP_REDIRECT) {
 			stats_record_action(ctx, XDP_REDIRECT);
-//			if( k_tracing ) bpf_printk("returning through bpf_redirect_map\n");
+//			if( k_tracing ) bpf_printk("returning through bpf_redirect_map");
 			return bpf_redirect_map(&xsks_map, index, XDP_PASS);
-//			if ( k_tracing ) bpf_printk("Substitute XDP_PASS for bpf_redirect_map\n");
+//			if ( k_tracing ) bpf_printk("Substitute XDP_PASS for bpf_redirect_map");
 //			return XDP_PASS;
 		}
     }
