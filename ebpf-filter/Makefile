@@ -4,6 +4,7 @@
 XDP_TARGETS  := af_xdp_kern
 USER_TARGETS := af_xdp_user ebpf-xdp_stats
 
+# Note: Not using the libbpf in the examples. Instead, use the 'latest' (1.0) libbpf
 LIBBPF_DIR = ../../libbpf/src/
 COMMON_DIR = ../common/
 
