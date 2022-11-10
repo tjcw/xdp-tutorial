@@ -31,4 +31,13 @@ ip addr add 10.10.0.1/16 dev br0
 iptables -P FORWARD ACCEPT
 iptables -F FORWARD
 
+ip netns exec ns2 ip link set dev vpeer2 xdpgeneric off
+rm -f /sys/fs/bpf/accept_map /sys/fs/bpf/xdp_stats_map
+ip netns exec ns2 ip tuntap add mode tun tun0
+ip netns exec ns2 ip link set dev tun0 down
+ip netns exec ns2 ip link set dev tun0 addr 10.10.0.30/24
+ip netns exec ns2 ip link set dev tun0 up
+export LD_LIBRARY_PATH=/usr/local/lib
+ip netns exec ns2 ./af_xdp_user -S -d vpeer2 -Q 0 --filename ./af_xdp_kern.o
+
 ip netns exec ns1 ping -c 5 10.10.0.20
