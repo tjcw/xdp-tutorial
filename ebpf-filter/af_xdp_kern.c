@@ -14,8 +14,6 @@
 
 #include "xsk_def_xdp_prog.h"
 
-//#define XDP_DISPATCHER_VERSION 1
-
 #define DEFAULT_QUEUE_IDS 64
 
 /* This is the data record stored in the map */
@@ -37,13 +35,6 @@ enum {
 enum {
 	k_hashmap_size = 64
 };
-
-//enum action_enum {
-//	k_action_redirect ,
-//	k_action_pass ,
-//	k_action_drop
-//}  ;
-//#define my_xsks_map xsks_map
 
 struct {
 	__uint(type, BPF_MAP_TYPE_XSKMAP);
@@ -72,7 +63,6 @@ struct {
 
 struct {
 	__uint(priority, 10);
-//	__uint(XDP_PASS, 1);
 } XDP_RUN_CONFIG(xsk_my_prog);
 
 static __always_inline void display_one(int index) {
@@ -146,24 +136,6 @@ static __always_inline void display_all(void) {
 	display_one(62) ;
 	display_one(63) ;
 }
-
-//#if 0
-///* This is the supplied libxdp default program for post 5.3 kernels. */
-//SEC("xdp")
-//int xsk_def_prog(struct xdp_md *ctx)
-//{
-//	/* A set entry here means that the corresponding queue_id
-//	 * has an active AF_XDP socket bound to it.
-//	 */
-//	if(k_tracing_detail) display_all() ;
-//    int index = ctx->rx_queue_index;
-//	/* A set entry here means that the correspnding queue_id
-//	 * has an active AF_XDP socket bound to it. */
-//	void * mapped=bpf_map_lookup_elem(&xsks_map, &index) ;
-//	if( k_tracing ) bpf_printk("xsks[%d]=%p", index, mapped) ;
-//	return bpf_redirect_map(&xsks_map, ctx->rx_queue_index, XDP_PASS);
-//}
-//#endif
 
 struct {
 	__uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
@@ -243,9 +215,6 @@ static __always_inline int parse_tcp4hdr(struct hdr_cursor *nh,
 	int hdrsize = sizeof(*tcp4h);
 	if (nh->pos + hdrsize >data_end)
 		return -1;
-//	int actual_hdrsize = ip4h->ihl*4;
-//	if (nh->pos + actual_hdrsize > data_end)
-//		return -1;
 	int actual_hdrsize=hdrsize ; // Ignore the possibility of TCP options
 	nh->pos += actual_hdrsize;
 	*tcp4hdr = tcp4h; /* Network byte order */
@@ -326,7 +295,6 @@ int xsk_my_prog(struct xdp_md *ctx)
 					struct tcphdr *t ;
 					rc = parse_tcp4hdr(&nh, data_end, &t);
 					if (rc != 0) goto out ;
-//					struct tcphdr *t= (struct tcphdr *)(iphdr+1) ;
 					f.sport = t->source ;
 					f.dport = t->dest ;
 					show_fivetuple(&f) ;
@@ -335,7 +303,6 @@ int xsk_my_prog(struct xdp_md *ctx)
 					struct udphdr *u ;
 					rc = parse_udp4hdr(&nh, data_end, &u);
 					if (rc != 0) goto out ;
-//					struct udphdr *u = (struct udphdr *)(iphdr+1) ;
 					f.sport = u->source ;
 					f.dport = u->dest ;
 					show_fivetuple(&f) ;
@@ -357,10 +324,8 @@ int xsk_my_prog(struct xdp_md *ctx)
 		}
 		if ( action == XDP_REDIRECT) {
 			stats_record_action(ctx, XDP_REDIRECT);
-//			if( k_tracing ) bpf_printk("returning through bpf_redirect_map");
+			if( k_tracing ) bpf_printk("returning through bpf_redirect_map");
 			return bpf_redirect_map(&xsks_map, index, XDP_PASS);
-//			if ( k_tracing ) bpf_printk("Substitute XDP_PASS for bpf_redirect_map");
-//			return XDP_PASS;
 		}
     }
 out:
@@ -368,8 +333,6 @@ out:
 }
 
 
-//__uint(dispatcher_version, XDP_DISPATCHER_VERSION) SEC(XDP_METADATA_SECTION);
 char _license[] SEC("license") = "GPL";
-//__uint(xsk_prog_version, XSK_PROG_VERSION) SEC(XDP_METADATA_SECTION);
 __uint(xsk_prog_version, XSK_PROG_VERSION) SEC(XDP_METADATA_SECTION);
 
