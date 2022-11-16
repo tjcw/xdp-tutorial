@@ -1,8 +1,11 @@
 #!/bin/bash -x
 ip netns add ns1
 ip netns exec ns1 mount -t bpf bpf /sys/fs/bpf
+ip netns exec ns1 df /sys/fs/bpf
+
 ip netns add ns2
 ip netns exec ns2 mount -t bpf bpf /sys/fs/bpf
+ip netns exec ns1 df /sys/fs/bpf
 
 ip link add veth1 type veth peer name vpeer1
 ip link add veth2 type veth peer name vpeer2
