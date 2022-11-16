@@ -1,6 +1,8 @@
 #!/bin/bash -x
 ip netns add ns1
+ip netns exec ns1 mount -t bpf bpf /sys/fs/bpf
 ip netns add ns2
+ip netns exec ns2 mount -t bpf bpf /sys/fs/bpf
 
 ip link add veth1 type veth peer name vpeer1
 ip link add veth2 type veth peer name vpeer2
@@ -37,7 +39,12 @@ ip netns exec ns2 ip tuntap add mode tun tun0
 ip netns exec ns2 ip link set dev tun0 down
 ip netns exec ns2 ip link set dev tun0 addr 10.10.0.30/24
 ip netns exec ns2 ip link set dev tun0 up
-export LD_LIBRARY_PATH=/usr/local/lib
-ip netns exec ns2 ./af_xdp_user -S -d vpeer2 -Q 0 --filename ./af_xdp_kern.o
 
+export LD_LIBRARY_PATH=/usr/local/lib
+ip netns exec ns2 ./af_xdp_user -S -d vpeer2 -Q 0 --filename ./af_xdp_kern.o &
+ns2_pid=$!
+sleep 2
 ip netns exec ns1 ping -c 5 10.10.0.20
+
+echo "kill -INT ${ns2_pid}"
+#wait
