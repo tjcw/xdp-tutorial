@@ -1,8 +1,9 @@
 #!/bin/bash -x
 ip netns delete ns1
-ip netns add ns1
-
 ip netns delete ns2
+sleep 2
+
+ip netns add ns1
 ip netns add ns2
 
 ip link add veth1 type veth peer name vpeer1
