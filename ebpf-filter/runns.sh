@@ -12,12 +12,6 @@ ip link set veth2 up
 ip link set vpeer1 netns ns1
 ip link set vpeer2 netns ns2
 
-ip netns exec ns1 ip link set lo up
-
-ip netns exec ns1 ip link set vpeer1 up
-
-ip netns exec ns1 ip addr add 10.10.0.10/16 dev vpeer1
-
 ip link add br0 type bridge
 ip link set br0 up
 
@@ -31,9 +25,8 @@ iptables -F FORWARD
 
 
 ip netns exec ns2 ./runns2.sh &
+ip netns exec ns1 ./runns1.sh
 
-sleep 2
-ip netns exec ns1 ping -c 5 10.10.0.20
 wait
 
 echo "ip netns delete ns1"
