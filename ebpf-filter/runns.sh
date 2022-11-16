@@ -12,18 +12,11 @@ ip link set veth2 up
 ip link set vpeer1 netns ns1
 ip link set vpeer2 netns ns2
 
-#ip netns exec ns1 mount -t bpf bpf /sys/fs/bpf
-#ip netns exec ns1 df /sys/fs/bpf
-
-
 ip netns exec ns1 ip link set lo up
-ip netns exec ns2 ip link set lo up
 
 ip netns exec ns1 ip link set vpeer1 up
-ip netns exec ns2 ip link set vpeer2 up
 
 ip netns exec ns1 ip addr add 10.10.0.10/16 dev vpeer1
-ip netns exec ns2 ip addr add 10.10.0.20/16 dev vpeer2
 
 ip link add br0 type bridge
 ip link set br0 up
@@ -36,11 +29,6 @@ ip addr add 10.10.0.1/16 dev br0
 iptables -P FORWARD ACCEPT
 iptables -F FORWARD
 
-ip netns exec ns2 ip link set dev vpeer2 xdpgeneric off
-ip netns exec ns2 ip tuntap add mode tun tun0
-ip netns exec ns2 ip link set dev tun0 down
-ip netns exec ns2 ip link set dev tun0 addr 10.10.0.30/24
-ip netns exec ns2 ip link set dev tun0 up
 
 ip netns exec ns2 ./runns2.sh &
 
