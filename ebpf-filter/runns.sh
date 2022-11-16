@@ -49,7 +49,7 @@ ns2_pid=$!
 sleep 2
 ip netns exec ns1 ping -c 5 10.10.0.20
 
-echo "kill -INT ${ns2_pid}"
-echo "wait"
+kill -INT ${ns2_pid}
+wait
 echo "ip netns delete ns1"
 echo "ip netns delete ns2"
