@@ -314,6 +314,11 @@ int xsk_my_prog(struct xdp_md *ctx)
 					v_permit=bpf_map_lookup_elem(&accept_map, &f) ;
 				}
 			}
+		else if (nh_type == bpf_htons(ETH_P_ARP) )
+		{
+			/* Always accept ARP packets */
+			return stats_record_action(ctx,XDP_PASS) ;
+		}
 
 		if( k_tracing ) bpf_printk("v_permit=%p", v_permit);
 
