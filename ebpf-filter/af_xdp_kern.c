@@ -14,15 +14,7 @@
 
 #include "xsk_def_xdp_prog.h"
 
-/* DEFAULT_QUEUE_IDS to agree with k_rx_queue_count_max in userland code */
-#define DEFAULT_QUEUE_IDS 64
-
-/* This is the data record stored in the map */
-struct datarec {
-	__u64 rx_packets;
-	/* Assignment#1: Add byte counters */
-	__u64 rx_bytes;
-};
+#include "af_xdp_kern_shared.h"
 
 #ifndef XDP_ACTION_MAX
 #define XDP_ACTION_MAX (XDP_REDIRECT + 1)
@@ -41,7 +33,7 @@ struct {
 	__uint(type, BPF_MAP_TYPE_XSKMAP);
 	__uint(key_size, sizeof(int));
 	__uint(value_size, sizeof(int));
-	__uint(max_entries, DEFAULT_QUEUE_IDS);
+	__uint(max_entries, k_rx_queue_count_max);
 } xsks_map SEC(".maps");
 
 struct fivetuple {
@@ -74,7 +66,7 @@ static __always_inline void display_one(int index) {
 static __always_inline void display_all(void) {
 	int a;
 #pragma unroll
-	for(a=0; a<DEFAULT_QUEUE_IDS; a+= 1)
+	for(a=0; a<k_rx_queue_count_max; a+= 1)
 	{
 		display_one(a) ;
 	}

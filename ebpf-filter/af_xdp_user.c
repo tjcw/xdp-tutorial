@@ -56,7 +56,6 @@ enum {
 	k_instrument_detail = false ,
 	k_verify_umem = false ,
 	k_verbose = true ,
-	k_rx_queue_count_max = 64 , /* To agree with DEFAULT_QUEUE_IDS in eBPF code */
 	k_skipping = false
 };
 
