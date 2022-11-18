@@ -56,7 +56,7 @@ enum {
 	k_instrument_detail = 0 ,
 	k_verify_umem = 0 ,
 	k_verbose = 1 ,
-	k_rx_queue_count = 1 ,
+	k_rx_queue_count_max = 256 ,
 //	k_rx_queue_count = 16 ,
 	k_skipping = false
 };
@@ -105,7 +105,7 @@ struct xsk_socket {
 };
 
 struct all_socket_info {
-	struct xsk_socket_info *xsk_socket_info[k_rx_queue_count] ;
+	struct xsk_socket_info *xsk_socket_info[k_rx_queue_count_max] ;
 };
 
 struct socket_stats {
@@ -166,8 +166,8 @@ static const struct option_wrapper long_options[] = {
 	{{"zero-copy",	 no_argument,		NULL, 'z' },
 	 "Force zero-copy mode"},
 
-	{{"queue",	 required_argument,	NULL, 'Q' },
-	 "Configure interface receive queue for AF_XDP, default=0"},
+	{{"queue-count", required_argument,	NULL, 'Q' },
+	 "Configure interface receive queue count for AF_XDP"},
 
 	{{"poll-mode",	 no_argument,		NULL, 'p' },
 	 "Use the poll() API waiting for packets to arrive"},
@@ -359,7 +359,12 @@ static struct all_socket_info *xsk_configure_socket_all(struct config *cfg, int 
 {
 
 	struct all_socket_info *xsk_info_all = calloc(1, sizeof(*xsk_info_all));
-	for(int q=0; q<k_rx_queue_count; q+=1)
+	int queue_count=cfg->xsk_if_queue ;
+	if ( queue_count <= 0 || queue_count > k_rx_queue_count_max) {
+		fprintf(stderr, "ERROR: queue_count (%d) out of range\n", queue_count) ;
+		return NULL ;
+	}
+	for(int q=0; q<queue_count; q+=1)
 	{
 		xsk_info_all->xsk_socket_info[q]=xsk_configure_socket(cfg, xsks_map_fd, q);
 		if(xsk_info_all->xsk_socket_info[q] == NULL )
@@ -565,20 +570,20 @@ static void rx_and_process(struct config *cfg,
 			   int tun_fd,
 			   int accept_map_fd )
 {
-	struct pollfd fds[k_rx_queue_count];
-	int ret, nfds = k_rx_queue_count;
+	struct pollfd fds[k_rx_queue_count_max];
+	int ret, nfds = cfg->xsk_if_queue;
 
 	memset(fds, 0, sizeof(fds));
-	for(int q=0; q<k_rx_queue_count; q+=1) {
+	for(int q=0; q<nfds; q+=1) {
 		fds[q].fd = xsk_socket__fd(all_socket_info->xsk_socket_info[q]->xsk);
 		fds[q].events = POLLIN;
 	}
 
 	while(!global_exit) {
 		ret = poll(fds, nfds, -1);
-		if (ret <= 0 || ret > k_rx_queue_count)
+		if (ret <= 0 || ret > nfds)
 			continue;
-		for(int q=0; q<k_rx_queue_count; q+=1) {
+		for(int q=0; q<nfds; q+=1) {
 			if ( fds[q].revents & POLLIN ) handle_receive_packets(all_socket_info->xsk_socket_info[q], stats, tun_fd, accept_map_fd ) ;
 		}
 	}
@@ -833,7 +838,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "ERROR:bpf_object__find_map_by_name returns NULL\n") ;
 		exit(EXIT_FAILURE);
 	}
-	err = bpf_map__set_max_entries(xsks_map, k_rx_queue_count);
+	err = bpf_map__set_max_entries(xsks_map, cfg.xsk_if_queue);
 	if ( err != 0) {
 		fprintf(stderr, "ERROR:bpf_map__set_max_entries returns %d %s\n", err, strerror(err)) ;
 		exit(EXIT_FAILURE);
@@ -913,7 +918,7 @@ int main(int argc, char **argv)
 
 	/* Cleanup */
 	close(tun_fd) ;
-	for(int q=0; q<k_rx_queue_count; q += 1) {
+	for(int q=0; q<cfg.xsk_if_queue; q += 1) {
 		xsk_socket__delete(all_socket_info->xsk_socket_info[q]->xsk) ;
 	}
 	xdp_program__detach(xdp_prog, cfg.ifindex, XDP_MODE_SKB, 0);

@@ -6,4 +6,4 @@ ip link set dev tun0 down
 ip link set dev tun0 addr 10.1.0.254/24
 ip link set dev tun0 up
 export LD_LIBRARY_PATH=/usr/local/lib
-./af_xdp_user -S -d enp25s0 -Q 0 --filename ./af_xdp_kern.o
+./af_xdp_user -S -d enp25s0 -Q 16 --filename ./af_xdp_kern.o
