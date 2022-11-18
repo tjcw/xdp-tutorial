@@ -52,12 +52,11 @@
 #endif
 
 enum {
-	k_instrument = 1 ,
-	k_instrument_detail = 0 ,
-	k_verify_umem = 0 ,
-	k_verbose = 1 ,
-	k_rx_queue_count_max = 256 ,
-//	k_rx_queue_count = 16 ,
+	k_instrument = true ,
+	k_instrument_detail = false ,
+	k_verify_umem = false ,
+	k_verbose = true ,
+	k_rx_queue_count_max = 64 , /* To agree with DEFAULT_QUEUE_IDS in eBPF code */
 	k_skipping = false
 };
 

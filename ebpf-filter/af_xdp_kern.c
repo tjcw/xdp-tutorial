@@ -14,6 +14,7 @@
 
 #include "xsk_def_xdp_prog.h"
 
+/* DEFAULT_QUEUE_IDS to agree with k_rx_queue_count_max in userland code */
 #define DEFAULT_QUEUE_IDS 64
 
 /* This is the data record stored in the map */
@@ -67,13 +68,13 @@ struct {
 
 static __always_inline void display_one(int index) {
 	void * mapped=bpf_map_lookup_elem(&xsks_map, &index) ;
-	bpf_printk("xsks_map[%d]=%p", index, mapped) ;
+	if (mapped) bpf_printk("xsks_map[%d]=%p", index, mapped) ;
 }
 
 static __always_inline void display_all(void) {
 	int a;
 #pragma unroll
-	for(a=0; a<k_hashmap_size; a+= 1)
+	for(a=0; a<DEFAULT_QUEUE_IDS; a+= 1)
 	{
 		display_one(a) ;
 	}
