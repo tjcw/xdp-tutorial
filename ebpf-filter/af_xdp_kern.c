@@ -253,7 +253,11 @@ int xsk_my_prog(struct xdp_md *ctx)
 		{
 			/* Always accept ARP packets */
 			return stats_record_action(ctx,XDP_PASS) ;
+		} else {
+			if( k_tracing ) bpf_printk("Unknown nh_type=0x%04x", nh_type);
+			return stats_record_action(ctx,XDP_PASS) ;
 		}
+
 
 		if( k_tracing ) bpf_printk("v_permit=%p", v_permit);
 
