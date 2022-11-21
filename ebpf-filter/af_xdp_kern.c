@@ -252,6 +252,7 @@ int xsk_my_prog(struct xdp_md *ctx)
 		else if (nh_type == bpf_htons(ETH_P_ARP) )
 		{
 			/* Always accept ARP packets */
+			if( k_tracing ) bpf_printk("ARP packet");
 			return stats_record_action(ctx,XDP_PASS) ;
 		} else {
 			if( k_tracing ) bpf_printk("Unknown nh_type=0x%04x", nh_type);
