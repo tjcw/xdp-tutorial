@@ -20,6 +20,10 @@
 #define XDP_ACTION_MAX (XDP_REDIRECT + 1)
 #endif
 
+#ifndef NULL
+#define NULL 0
+#endif
+
 enum {
 	k_tracing = 1,
 	k_tracing_detail = 0
